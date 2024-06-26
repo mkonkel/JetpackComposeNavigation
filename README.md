@@ -124,3 +124,24 @@ Button(onClick = { navController.navigate(Screen.SecondScreen.route) }) { Text("
 ```kotlin
 Button(onClick = { navController.popBackStack() }) { Text("Go Back") }
 ```
+
+After all that we neet to use our `Navigation()` function in the application entrypoint, for andorid it is the `MainActivity.kt` and for iOS it is the `MainViewController.kt`.
+
+```kotlin
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContent {
+            Navigation()
+        }
+    }
+}
+```
+
+```kotlin
+fun MainViewController() = ComposeUIViewController { Navigation() }
+```
+
+After running the application we should see the `FirstScreen` with a button that navigates to the `SecondScreen` and a button that navigates back to the `FirstScreen`.
+![Linear Navigation](/blog/linear_navigation_1.gif "linear navigation gif")
