@@ -24,5 +24,32 @@ fun FirstScreen(navController: NavHostController) {
         ) {
             Text("Second Screen")
         }
+
+        Button(
+            onClick = {
+                val greetings = "Hello from First Screen"
+                // Navigate to the ThirdScreen with greetings as an argument
+                // the route looks like this: thirdScreen/{greetings}"
+                navController.navigate(Screen.ThirdScreen.withGreetings(greetings))
+            }
+        ) {
+            Text("Third Screen")
+        }
+
+        Button(
+            onClick = {
+                navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe"))
+            }
+        ) {
+            Text("John Doe Screen")
+        }
+
+        Button(
+            onClick = {
+                navController.navigate(Screen.FourthScreen.withName("Michael"))
+            }
+        ) {
+            Text("Michael Screen")
+        }
     }
 }
