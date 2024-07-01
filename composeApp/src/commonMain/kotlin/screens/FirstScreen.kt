@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
+import navigation.ROUTE
 import navigation.Screen
 
 @Composable
@@ -50,6 +51,14 @@ fun FirstScreen(navController: NavHostController) {
             }
         ) {
             Text("Michael Screen")
+        }
+
+        Button(
+            onClick = {
+                navController.navigate(ROUTE.NESTED)
+            }
+        ) {
+            Text("Nested")
         }
     }
 }

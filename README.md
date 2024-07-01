@@ -50,7 +50,8 @@ sourceSets {
 ```
 
 > Note: The recent release
-> of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)adds `Safe Args`
+> of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)
+> adds `Safe Args`
 > which is a convenient way of defining routes with usage
 > of  [Kotlin Serialization](https://kotlinlang.org/docs/serialization.html) - but it's not available yet in compose
 > multiplatform `1.6.11`. I hope it changes soon, but for now we need to define routes as plain strings.
@@ -172,7 +173,8 @@ button that navigates back to the `FirstScreen`.
 ### Passing parameters
 
 > Note: The recent release
-> of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)adds `Safe Args`
+> of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)
+> adds `Safe Args`
 > which is a convenient way of passing parameters. Which is not available yet in compose multiplatform `1.6.11`.
 
 There are two types of arguments **required*** and **optional**, optionals should be created with a default value. As
@@ -293,7 +295,7 @@ You need to remember that for optional argument you need to provide a default va
 Let's create the `FourthScreen` that will accept the optional `name` and optional (but nullable) `surname` parameters.
 
 ```kotlin
-    data object FourthScreen : Screen(
+data object FourthScreen : Screen(
     route = "fourthScreen"
             + "?${ARGUMENTS.NAME}={${ARGUMENTS.NAME}}"
             + "&${ARGUMENTS.SURNAME}={${ARGUMENTS.SURNAME}}"
@@ -312,7 +314,7 @@ Let's create the `FourthScreen` that will accept the optional `name` and optiona
 ```
 
 ```kotlin
-        composable(
+composable(
     route = Screen.FourthScreen.route,
     arguments = listOf(
         navArgument(Screen.FourthScreen.ARGUMENTS.NAME) {
@@ -359,3 +361,207 @@ The FourthScreen should be built in a same way as ThordScreen with proper parame
 
 ![Optional Arguments](/blog/arguments_3.gif "optional argument gif")
 
+### Nested Navigation
+
+In case of complex applications splitting navigation into smaller parts is a good idea. Currently, we have one `NavHost`
+with all screens originating from the same place.
+Which is not a problem for a small application, but in case of a bigger one it can be a mess. We can split the
+navigation into smaller parts that will be encapsulated according to their purpose.
+We can create a `Fifth` and `Sixth` screen that will separate from main navigation and will be accessible only from
+the `ThirdScreen`. The graph for such screens will look like this:
+
+```mermaid
+  graph TD
+;
+    A[NavHost] --> B[RootGraph]
+    B --> C[FirstScreen]
+    B --> D[SecondScreen]
+    B --> E[ThirdScreen]
+    B --> F[FourthScreen]
+    B --> G[FifthScreen]
+    G --> H[SixthScreen]
+    G --> I[SeventhScreen]
+```
+
+With such structured navigation we can easily manage the navigation and the screens. We can create a `NestedNavigation`
+composable function that will hold the `NavHost` and `navigationController` for the nested navigation.
+Closing the `ThirdScreen` will trigger removing all its children from the backstack and they won;t be accessible
+anymore. It's a great tool for structuring processes in the application - when a process is finished (a signup, a
+payment, a tutorial) we can close the process and remove all its children from the backstack easily.
+
+> If you read my post about navigation [Decompose](https://github.com/mkonkel/DecomposeNavigation) you can see
+> similarities in the approach. In Decompose every component can have its own stack and manage it.
+
+Adding nested navigation graph is done by using the `navigation()` function in the `NavHost` composable.
+The `navigation()` function takes the `startDestination` and the `route`. The `route` is a unique name of the nested
+navigation graph to distinguish it from other graphs. The `startDestination` is the screen that will be displayed when
+the nested graph is opened.
+We can also add the `route` parameter to `NavHost` to be cristal clear which screen is where.
+
+```kotlin 
+private object ROUTE {
+    const val ROOT = "root"
+    const val NESTED = "nested"
+    const val MAIN = "main" // will be used in a while
+}
+
+@Composable
+fun Navigation() {
+
+    NavHost(
+        navController = navController,
+        startDestination = Screen.FirstScreen.route,
+        route = ROUTE.ROOT
+    ) {
+        ...
+        navigation(
+            startDestination = Screen.ThirdScreen.route,
+            route = ROUTE.NESTED
+        ) {
+            composable(route = Screen.FifthScreen.route) {
+                FifthScreen(navController)
+            }
+
+            composable(route = Screen.SixthScreen.route) {
+                SixthScreen(navController)
+            }
+        }
+    }
+}
+```
+
+To clarify the navigation we can split the `Navigation()` function into separate components. One handling `home` and
+second handling `nested` graphs.
+To do so we need to create extension functions for `NavGraphBuilder` that will result in graph changes:
+
+```mermaid
+  graph TD
+;
+    A[NavHost] --> B[RootGraph]
+    B --> C[MainHost]
+    C --> D[FirstScreen]
+    C --> E[SecondScreen]
+    C --> F[ThirdScreen]
+    C --> G[FourthScreen]
+    B --> H[NestedHost]
+    H --> I[FifthScreen]
+    I --> J[SeventhScreen]
+    I --> K[SixthScreen]
+```
+
+```kotlin
+fun NavGraphBuilder.nested(navController: NavHostController) {
+    navigation(
+        startDestination = Screen.ThirdScreen.route,
+        route = ROUTE.NESTED
+    ) {
+        // code for nested navigation
+    }
+}
+```
+
+```kotlin
+fun NavGraphBuilder.main(navController: NavHostController) {
+    navigation(
+        startDestination = Screen.SixthScreen.route,
+        route = ROUTE.MAIN
+    ) {
+        // code for main navigation
+    }
+}
+```
+
+```kotlin
+@Composable
+fun Navigation() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = ROUTE.MAIN,
+        route = ROUTE.ROOT
+    ) {
+        main(navController)
+        nested(navController)
+    }
+}
+```
+
+```kotlin
+fun FirstScreen(navController: NavHostController) {
+    ...
+    Button(
+        onClick = {
+            navController.navigate(ROUTE.NESTED)
+        }
+    ) {
+        Text("Nested")
+    }
+}
+```
+
+With such changes we still can navigate between graphs. There is no problem calling the `FourtsScreen` from nested
+graph. The `SixthScreen` will open a `FourthScreen`.
+
+```kotlin
+@Composable
+fun SixthScreen(navController: NavHostController) {
+    ...
+    Button(
+        onClick = {
+            navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe"))
+        }
+    ) {
+        Text("John Doe Screen")
+    }
+}
+}
+```
+
+We can now modify the `FourthScreen` and add a button that will navigate back to `MAIN` route instead of the popping
+back the stack.
+But we would like to close the `NESTED` graph and remove all its children from the backstack, so we will not navigate to
+the screen but to the graph route.
+The `navigate()` builder has a `popUpTo` method that allows us to remove the screens from the backstack. We can pass the
+route to which we want to pop back to. There is also the `inclusive` parameter to remove the passed route from the
+backstack - but we will not use it in this example.
+
+```kotlin
+@Composable
+fun FourthScreen(...) {
+    ...
+    Button(
+        onClick = {
+            navController.navigate(ROUTE.MAIN) {
+                popUpTo(ROUTE.MAIN) // results in closing the NESTED graph
+            }
+        }
+    ) {
+        Text("MAIN")
+    }
+}
+}
+```
+
+We can close the `NESTED` graph even quicker, while opening the `FourthScreen` from the `SixthScreen` all we need to do
+is use `popUpTo()` method with the `ROUTE.NESTED` parameter.
+
+```kotlin
+@Composable
+fun SixthScreen(...) {
+    ...
+    Button(onClick = {
+        navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe")) {
+            popUpTo(ROUTE.NESTED)
+        }
+    }) {
+        Text("John Doe Screen")
+    }
+}
+}
+```
+
+You can mix the functions as much as you want to achieve desired behaviour. You can `pop` screen before entering a new
+one, drop whole graphs and more - it;s a flexible solution.
+
+![Nested Graphs](/blog/nested_graphs_5.gif "nested graphs gif")

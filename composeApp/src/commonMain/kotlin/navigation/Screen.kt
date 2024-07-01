@@ -29,5 +29,9 @@ sealed class Screen(val route: String) {
         }
     }
 
+    data object FifthScreen : Screen(route = "fifthScreen")
+    data object SixthScreen : Screen(route = "sixthScreen")
+    data object SeventhScreen : Screen(route = "seventhScreen")
+
     internal fun String.replaceArgumentWithValue(argument: String, value: String) = this.replace("{$argument}", value)
 }

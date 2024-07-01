@@ -1,4 +1,4 @@
-package screens
+package screens.nested
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,30 +13,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import navigation.ROUTE
+import navigation.Screen
 
 @Composable
-fun FourthScreen(navController: NavHostController, name: String, surname: String?) {
+fun SixthScreen(navController: NavHostController) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Fourth screen")
+        Text("Nested")
+        Text("Sixth screen")
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Name: $name")
-        Text("Surname: $surname")
-        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = {
+            navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe")) {
+                popUpTo(ROUTE.NESTED)
+            }
+        }) {
+            Text("John Doe Screen")
+        }
+
         Button(onClick = { navController.popBackStack() }) {
             Text("Go Back")
-        }
-        Button(
-            onClick = {
-                navController.navigate(ROUTE.MAIN) {
-                    popUpTo(ROUTE.MAIN)
-                }
-            }
-        ) {
-            Text("MAIN")
         }
     }
 }
