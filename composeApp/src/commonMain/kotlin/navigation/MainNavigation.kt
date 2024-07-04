@@ -10,6 +10,7 @@ import screens.FirstScreen
 import screens.FourthScreen
 import screens.SecondScreen
 import screens.ThirdScreen
+import screens.bottom.EighthScreen
 
 fun NavGraphBuilder.main(navController: NavHostController) {
     navigation(
@@ -55,6 +56,10 @@ fun NavGraphBuilder.main(navController: NavHostController) {
                 requireNotNull(it.arguments?.getString(Screen.FourthScreen.ARGUMENTS.NAME)),
                 it.arguments?.getString(Screen.FourthScreen.ARGUMENTS.SURNAME),
             )
+        }
+
+        composable(route = Screen.EighthScreen.route) {
+            EighthScreen()
         }
     }
 }

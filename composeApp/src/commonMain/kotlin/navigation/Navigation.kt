@@ -2,12 +2,15 @@ package navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import screens.bottom.EighthScreen
 
 object ROUTE {
     const val ROOT = "root"
     const val MAIN = "main"
     const val NESTED = "nested"
+    const val BOTTOM = "bottom"
 }
 
 @Composable

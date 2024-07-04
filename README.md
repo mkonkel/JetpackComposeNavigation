@@ -49,7 +49,9 @@ sourceSets {
 }
 ```
 
-> Note: The recent release
+> Note:
+>
+> The recent release
 > of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)
 > adds `Safe Args`
 > which is a convenient way of defining routes with usage
@@ -172,7 +174,9 @@ button that navigates back to the `FirstScreen`.
 
 ### Passing parameters
 
-> Note: The recent release
+> Note:
+>
+> The recent release
 > of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)
 > adds `Safe Args`
 > which is a convenient way of passing parameters. Which is not available yet in compose multiplatform `1.6.11`.
@@ -564,4 +568,198 @@ fun SixthScreen(...) {
 You can mix the functions as much as you want to achieve desired behaviour. You can `pop` screen before entering a new
 one, drop whole graphs and more - it;s a flexible solution.
 
-![Nested Graphs](/blog/nested_graphs_5.gif "nested graphs gif")
+![Nested Graphs](/blog/nested_graphs_4.gif "nested graphs gif")
+
+### Bottom Navigation
+
+Yet another thing that is widely common in mobile apps nowadays is the bottom navigation. Let's extend the project with
+one more feature!  We need to add three new screens. `EighthScreen` which will be the main screen that holds bottom
+menu, and it's a container for the tabs `NinthScreen` and `TenthScreen`.
+Inside the `EighthScreen` we will add a new `NavHost` that will build its own graph and will be handling switching tabs.
+We will be also using the `BottomNavigation` control to create the bottom bar and it's items.
+
+```kotlin
+@Composable
+fun EighthScreen() {
+    val navController = rememberNavController()
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            // TODO: add bottom navigation
+        },
+    ) { innerPadding ->
+        NavHost(
+            modifier = Modifier.padding(innerPadding),
+            navController = navController,
+            startDestination = Screen.Tab.NinthScreen.route,
+        ) {
+            composable(route = Screen.Tab.NinthScreen.route) {
+                NinthScreen()
+            }
+
+            composable(route = Screen.Tab.TenthScreen.route) {
+                TenthScreen()
+            }
+        }
+    }
+}
+```
+
+The nev `NavHost` has its own `navController` and `startDestination`. When we enter the item displayed in the first tab
+will be always the `NinthScreen`.
+The local `navController` will be used to navigate between tabs. The `BottomNavigation` control its quite helpful it
+will render the bottom bar with necessary elements such as **icon**, **label** and **selected** state.
+But to do so we need to provide the info about the tabs. Like in every other type of navigation the displayed screens
+need their own `route`, so we can to create a new `sealed class` for the tabs inside current `Screen.kt`
+
+```kotlin
+    sealed class Screen(val route: String) {
+    ...
+    data object EighthScreen : Screen(route = "eighthScreen")
+    sealed class Tab(route: String, val icon: ImageVector, val label: String) : Screen(route) {
+        data object NinthScreen : Tab(route = "ninthScreen", icon = Icons.Default.Home, label = "Ninth")
+        data object TenthScreen : Tab(route = "tenthScreen", icon = Icons.Default.Edit, label = "Tenth")
+    }
+}
+```
+
+Now we can create the bottom navigation tabs.
+
+```kotlin
+@Composable
+fun BottomBar(navController: NavHostController) {
+    val tabs = listOf(
+        Screen.Tab.NinthScreen,
+        Screen.Tab.TenthScreen,
+    )
+
+    val backstackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = backstackEntry?.destination
+
+    BottomNavigation {
+        // TODO add UI representation of the bottom menu items that will change the tabs
+    }
+}
+```
+
+The `BottomBar` is a composable responsible for handling the elements inside tabs container. We need to specify the
+elements (in our case `tabs`) that are available in the bottom bar. We are also using
+the `currentBackStackEntryAsState()` to get the current destination - the value is updated with every `navControler`
+changes due to `navigate()` or `pop()` functions which are triggering the recomposition, as a result the top entry on
+the backstack is returned - so we will know what is currently displayed, and can retrieve the `destination` that
+contains a `route` and other information about the screen.
+
+The `BottomNavigation` control takes a few of parameters, and the last one is the `content` that will be displayed in
+the bottom navigation items - so for each tab that we want to display we should create proper UI element.
+We can create an extension function for `RowScope` that will create the `BottomNavigationItem` for each tab and provide
+necessary data.
+
+```kotlin
+@Composable
+fun RowScope.TabItem(
+    tab: Screen.Tab,
+    currentDestination: NavDestination?,
+    navController: NavHostController,
+) {
+    BottomNavigationItem(
+        icon = { Icon(imageVector = tab.icon, contentDescription = "navigation_icon_${tab.label}") },
+        label = { Text(tab.label) },
+        selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
+        onClick = {
+            navController.navigate(tab.route) {
+                navController.graph.startDestinationRoute?.let { popUpTo(it) }
+                launchSingleTop = true
+            }
+        },
+    )
+}
+```
+
+The `BottomNavigationItem` allow us to customize the view of the tab. We can provide the `icon`, `label`, `selected`
+state and `onClick` action.
+The `selected` state is calculated by checking if the current destination is the same as the tab route of the item.
+The `onClick` action is responsible for navigating to the clicked tab.
+
+Since we want only one active screen inside the tabs container we need `pop` to it causing dropping other element from
+the back stack. We can also add the `launchSingleTop` which will ensure that the is not preserved, and will be
+recreated.
+
+Wrapping things up, we should have the `EighthScreen` built like that
+
+```kotlin
+@Composable
+fun EighthScreen() {
+    val navController = rememberNavController()
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        bottomBar = {
+            BottomBar(navController)
+        },
+    ) { innerPadding ->
+        NavHost(
+            modifier = Modifier.padding(innerPadding),
+            navController = navController,
+            startDestination = Screen.Tab.NinthScreen.route,
+        ) {
+            composable(route = Screen.Tab.NinthScreen.route) {
+                NinthScreen()
+            }
+
+            composable(route = Screen.Tab.TenthScreen.route) {
+                TenthScreen()
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomBar(navController: NavHostController) {
+    val tabs = listOf(
+        Screen.Tab.NinthScreen,
+        Screen.Tab.TenthScreen,
+    )
+
+    val backstackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = backstackEntry?.destination
+
+    BottomNavigation {
+        tabs.forEach { tab ->
+            TabItem(tab, currentDestination, navController)
+        }
+    }
+}
+
+@Composable
+fun RowScope.TabItem(
+    tab: Screen.Tab,
+    currentDestination: NavDestination?,
+    navController: NavHostController,
+) {
+    BottomNavigationItem(
+        icon = { Icon(imageVector = tab.icon, contentDescription = "navigation_icon_${tab.label}") },
+        label = { Text(tab.label) },
+        selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
+        onClick = {
+            navController.navigate(tab.route) {
+                navController.graph.startDestinationRoute?.let { popUpTo(it) }
+                launchSingleTop = true
+            }
+        },
+    )
+}
+```
+
+Last thing to do is to add an entrypoint in the `main` graph.
+
+```kotlin
+fun NavGraphBuilder.main(navController: NavHostController) {
+    ...
+    composable(route = Screen.EighthScreen.route) {
+        EighthScreen()
+    }
+}
+```
+
+![Bottom Navigation](/blog/bottom_navigation_5.gif "bottom navigation gif")

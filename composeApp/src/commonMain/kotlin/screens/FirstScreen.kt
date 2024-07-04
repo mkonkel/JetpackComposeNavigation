@@ -60,5 +60,13 @@ fun FirstScreen(navController: NavHostController) {
         ) {
             Text("Nested")
         }
+
+        Button(
+            onClick = {
+                navController.navigate(Screen.EighthScreen.route)
+            }
+        ) {
+            Text("Bottom")
+        }
     }
 }
