@@ -18,20 +18,41 @@ the [Voyager](https://github.com/mkonkel/VoyagerNavigation), [Apyx](https://gith
 
 ### The project:
 
+> Note:
+>
+> The recent release
+> of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)
+> adds `Safe Args`
+> which is a convenient way of defining routes with usage
+> of  [Kotlin Serialization](https://kotlinlang.org/docs/serialization.html) - but it's not available yet in compose
+> multiplatform `1.6.11`. I hope it changes soon, but for now we need to define routes as plain strings.
+>
+>> 05.07.2024 edit:
+>>
+>> Good news are that the new version of compose multiplatform is available the `1.7.0-alpha01` and it brings the `Safe Args`!
+
 Base project setup as always is made with [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com), we also need to add
 some [navigation-compose](https://developer.android.com/develop/ui/compose/navigation) as it is the core
 thing that we would like to examine, according to
 the [documentation](https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-navigation-routing.html#sample-project)
-we should use `navigation` in version `2.7.0-alpha07`
+we should use `navigation` in version `2.8.0-alpha08`
 
 *libs.versions.toml*
 
 ```toml
 [versions]
-navigation-compose = "2.7.0-alpha07"
+compose-plugin = "1.7.0-alpha01"
+navigation-compose = "2.8.0-alpha08"
+serialization = "1.6.3"
 
 [libraries]
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation-compose" }
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+
+[plugins]
+jetbrainsCompose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
+kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+
 ```
 
 Freshly added dependencies needs to be synced with the project and added to the ***build.gradle.kts***
@@ -49,19 +70,7 @@ sourceSets {
 }
 ```
 
-> Note:
->
-> The recent release
-> of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)
-> adds `Safe Args`
-> which is a convenient way of defining routes with usage
-> of  [Kotlin Serialization](https://kotlinlang.org/docs/serialization.html) - but it's not available yet in compose
-> multiplatform `1.6.11`. I hope it changes soon, but for now we need to define routes as plain strings.
->
->Each version of `Compose Multiplatform` is built with different dependencies, and it's at least one version behind
-> the `JetpackCompose` for Android. If you are interested what is in the latest
-> release [1.6.11](https://github.com/JetBrains/compose-multiplatform/releases/tag/v1.6.11) please check the
-> documentation. To mitigate the Type Safety routing we will be using a `sealed class` with string parameter.
+
 
 ### Linear Navigation
 
@@ -763,3 +772,13 @@ fun NavGraphBuilder.main(navController: NavHostController) {
 ```
 
 ![Bottom Navigation](/blog/bottom_navigation_5.gif "bottom navigation gif")
+
+### Async Operations
+
+The last thing that we will cover in this post is the async operations. All previously discussed navigation
+frameworks ([Decompose](https://github.com/mkonkel/DecomposeNavigation), [Appyx](https://github.com/mkonkel/AppyxNavigation), [Voyager](https://github.com/mkonkel/VoyagerNavigation))
+provided they own business logic container where async operation can be handled.
+In the case of JetpackCompose we will be using `ViewModels` that recently were moved compose multiplatform library,
+please keep in mind that Appyc and Voyager still allow to use `ViewModels` even if they provide their own implementation
+of similar concept.
+
