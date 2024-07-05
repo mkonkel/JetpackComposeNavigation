@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import navigation.ROUTE
+import navigation.Route
 import navigation.Screen
 
 @Composable
@@ -27,8 +27,8 @@ fun SixthScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe")) {
-                popUpTo(ROUTE.NESTED)
+            navController.navigate(Screen.Fourth("John", "Doe")) {
+                popUpTo(Route.Nested)
             }
         }) {
             Text("John Doe Screen")

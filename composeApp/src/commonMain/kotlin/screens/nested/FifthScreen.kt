@@ -30,10 +30,10 @@ fun FifthScreen(navController: NavHostController) {
         Button(onClick = { navController.popBackStack() }) {
             Text("Go Back")
         }
-        Button(onClick = { navController.navigate(Screen.SixthScreen.route) }) {
+        Button(onClick = { navController.navigate(Screen.Sixth) }) {
             Text("Sixth Screen")
         }
-        Button(onClick = { navController.navigate(Screen.SeventhScreen.route) }) {
+        Button(onClick = { navController.navigate(Screen.Seventh) }) {
             Text("Seventh Screen")
         }
     }

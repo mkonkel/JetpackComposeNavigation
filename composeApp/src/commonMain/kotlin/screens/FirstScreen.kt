@@ -9,7 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
-import navigation.ROUTE
+import navigation.Route
 import navigation.Screen
 
 @Composable
@@ -21,7 +21,7 @@ fun FirstScreen(navController: NavHostController) {
     ) {
         Text("First screen")
         Button(
-            onClick = { navController.navigate(Screen.SecondScreen.route) }
+            onClick = { navController.navigate(Screen.Second) }
         ) {
             Text("Second Screen")
         }
@@ -29,9 +29,7 @@ fun FirstScreen(navController: NavHostController) {
         Button(
             onClick = {
                 val greetings = "Hello from First Screen"
-                // Navigate to the ThirdScreen with greetings as an argument
-                // the route looks like this: thirdScreen/{greetings}"
-                navController.navigate(Screen.ThirdScreen.withGreetings(greetings))
+                navController.navigate(Screen.Third(greetings))
             }
         ) {
             Text("Third Screen")
@@ -39,7 +37,7 @@ fun FirstScreen(navController: NavHostController) {
 
         Button(
             onClick = {
-                navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe"))
+                navController.navigate(Screen.Fourth("John", "Doe"))
             }
         ) {
             Text("John Doe Screen")
@@ -47,7 +45,7 @@ fun FirstScreen(navController: NavHostController) {
 
         Button(
             onClick = {
-                navController.navigate(Screen.FourthScreen.withName("Michael"))
+                navController.navigate(Screen.Fourth(name = "Michael"))
             }
         ) {
             Text("Michael Screen")
@@ -55,7 +53,7 @@ fun FirstScreen(navController: NavHostController) {
 
         Button(
             onClick = {
-                navController.navigate(ROUTE.NESTED)
+                navController.navigate(Route.Nested)
             }
         ) {
             Text("Nested")
@@ -63,7 +61,7 @@ fun FirstScreen(navController: NavHostController) {
 
         Button(
             onClick = {
-                navController.navigate(Screen.EighthScreen.route)
+                navController.navigate(Screen.Eighth)
             }
         ) {
             Text("Bottom")

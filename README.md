@@ -66,11 +66,10 @@ sourceSets {
     commonMain.dependencies {
         ...
         implementation(libs.navigation.compose)
+        implementation(libs.serialization.json)
     }
 }
 ```
-
-
 
 ### Linear Navigation
 

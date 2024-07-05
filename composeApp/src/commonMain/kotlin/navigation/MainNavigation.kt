@@ -2,10 +2,9 @@ package navigation
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
-import androidx.navigation.navArgument
+import androidx.navigation.toRoute
 import screens.FirstScreen
 import screens.FourthScreen
 import screens.SecondScreen
@@ -14,51 +13,37 @@ import screens.bottom.EighthScreen
 
 fun NavGraphBuilder.main(navController: NavHostController) {
     navigation(
-        startDestination = Screen.FirstScreen.route,
-        route = ROUTE.MAIN
+        startDestination = Screen.First,
+        route = Route.Main::class
     ) {
-        composable(route = Screen.FirstScreen.route) {
+        composable<Screen.First> {
             FirstScreen(navController)
         }
 
-        composable(route = Screen.SecondScreen.route) {
+        composable<Screen.Second> {
             SecondScreen(navController)
         }
 
-        composable(
-            route = Screen.ThirdScreen.route,
-            arguments = listOf(navArgument(Screen.ThirdScreen.ARGUMENTS.GREETING) {
-                type = NavType.StringType
-            })
-        ) {
+        composable<Screen.Third> {
+            val args = it.toRoute<Screen.Third>()
+
             ThirdScreen(
-                navController,
-                it.arguments?.getString(Screen.ThirdScreen.ARGUMENTS.GREETING).orEmpty()
+                navController = navController,
+                greetings = args.greeting
             )
         }
 
-        composable(
-            route = Screen.FourthScreen.route,
-            arguments = listOf(
-                navArgument(Screen.FourthScreen.ARGUMENTS.NAME) {
-                    type = NavType.StringType
-                    defaultValue = ""
-                },
-                navArgument(Screen.FourthScreen.ARGUMENTS.SURNAME) {
-                    type = NavType.StringType
-                    defaultValue = null
-                    nullable = true
-                },
-            )
-        ) {
+        composable<Screen.Fourth> {
+            val args = it.toRoute<Screen.Fourth>()
+
             FourthScreen(
-                navController,
-                requireNotNull(it.arguments?.getString(Screen.FourthScreen.ARGUMENTS.NAME)),
-                it.arguments?.getString(Screen.FourthScreen.ARGUMENTS.SURNAME),
+                navController = navController,
+                name = args.name,
+                surname = args.surname
             )
         }
 
-        composable(route = Screen.EighthScreen.route) {
+        composable<Screen.Eighth> {
             EighthScreen()
         }
     }

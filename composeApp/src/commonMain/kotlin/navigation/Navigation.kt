@@ -2,15 +2,19 @@ package navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import screens.bottom.EighthScreen
+import kotlinx.serialization.Serializable
 
-object ROUTE {
-    const val ROOT = "root"
-    const val MAIN = "main"
-    const val NESTED = "nested"
-    const val BOTTOM = "bottom"
+@Serializable
+sealed class Route {
+    @Serializable
+    data object Root : Route()
+
+    @Serializable
+    data object Main : Route()
+
+    @Serializable
+    data object Nested : Route()
 }
 
 @Composable
@@ -19,8 +23,8 @@ fun Navigation() {
 
     NavHost(
         navController = navController,
-        startDestination = ROUTE.MAIN,
-        route = ROUTE.ROOT
+        startDestination = Route.Main,
+        route = Route.Root::class
     ) {
         main(navController)
         nested(navController)

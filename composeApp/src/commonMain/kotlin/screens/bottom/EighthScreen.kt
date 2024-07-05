@@ -8,6 +8,9 @@ import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.Icon
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -33,13 +36,13 @@ fun EighthScreen() {
         NavHost(
             modifier = Modifier.padding(innerPadding),
             navController = navController,
-            startDestination = Screen.Tab.NinthScreen.route,
+            startDestination = Screen.Eighth.Tab.Home,
         ) {
-            composable(route = Screen.Tab.NinthScreen.route) {
+            composable<Screen.Eighth.Tab.Home> {
                 NinthScreen()
             }
 
-            composable(route = Screen.Tab.TenthScreen.route) {
+            composable<Screen.Eighth.Tab.Edit> {
                 TenthScreen()
             }
         }
@@ -47,10 +50,10 @@ fun EighthScreen() {
 }
 
 @Composable
-fun BottomBar(navController: NavHostController) {
+private fun BottomBar(navController: NavHostController) {
     val tabs = listOf(
-        Screen.Tab.NinthScreen,
-        Screen.Tab.TenthScreen,
+        Screen.Eighth.Tab.Home,
+        Screen.Eighth.Tab.Edit,
     )
 
     val backstackEntry by navController.currentBackStackEntryAsState()
@@ -64,20 +67,25 @@ fun BottomBar(navController: NavHostController) {
 }
 
 @Composable
-fun RowScope.TabItem(
-    tab: Screen.Tab,
+private fun RowScope.TabItem(
+    tab: Screen.Eighth.Tab,
     currentDestination: NavDestination?,
     navController: NavHostController,
 ) {
     BottomNavigationItem(
-        icon = { Icon(imageVector = tab.icon, contentDescription = "navigation_icon_${tab.label}") },
+        icon = { Icon(imageVector = tab.icon.toVector(), contentDescription = "navigation_icon_${tab.label}") },
         label = { Text(tab.label) },
-        selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
+        selected = currentDestination?.hierarchy?.any { it == tab } == true,
         onClick = {
-            navController.navigate(tab.route) {
+            navController.navigate(tab) {
                 navController.graph.startDestinationRoute?.let { popUpTo(it) }
                 launchSingleTop = true
             }
         },
     )
+}
+
+private fun Screen.Eighth.Tab.ICON.toVector() = when (this) {
+    Screen.Eighth.Tab.ICON.HOME -> Icons.Default.Home
+    Screen.Eighth.Tab.ICON.EDIT -> Icons.Default.Edit
 }

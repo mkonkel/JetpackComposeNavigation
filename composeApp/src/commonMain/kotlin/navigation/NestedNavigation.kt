@@ -10,18 +10,18 @@ import screens.nested.SixthScreen
 
 fun NavGraphBuilder.nested(navController: NavHostController) {
     navigation(
-        startDestination = Screen.FifthScreen.route,
-        route = ROUTE.NESTED
+        startDestination = Screen.Fifth,
+        route = Route.Nested::class
     ) {
-        composable(route = Screen.FifthScreen.route) {
+        composable<Screen.Fifth> {
             FifthScreen(navController)
         }
 
-        composable(route = Screen.SixthScreen.route) {
+        composable<Screen.Sixth> {
             SixthScreen(navController)
         }
 
-        composable(route = Screen.SeventhScreen.route) {
+        composable<Screen.Seventh> {
             SeventhScreen(navController)
         }
     }

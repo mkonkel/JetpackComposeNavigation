@@ -12,7 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import navigation.ROUTE
+import navigation.Route
 
 @Composable
 fun FourthScreen(navController: NavHostController, name: String, surname: String?) {
@@ -31,8 +31,8 @@ fun FourthScreen(navController: NavHostController, name: String, surname: String
         }
         Button(
             onClick = {
-                navController.navigate(ROUTE.MAIN) {
-                    popUpTo(ROUTE.MAIN)
+                navController.navigate(Route.Main) {
+                    popUpTo(Route.Main)
                 }
             }
         ) {
