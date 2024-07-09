@@ -736,3 +736,12 @@ provided they own business logic container object where async operation can be h
 will be using `ViewModels` that recently were moved to compose multiplatform library. 
 Please keep in mind that Appyx and Voyager still allow to use `ViewModels` if you want to do so.
 
+First thing to add is the proper dependency.
+
+```yaml
+[versions]
+common-viewmodels = "2.8.0"
+
+[libraries]
+viewmodels-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "common-viewmodels" }
+``
