@@ -733,10 +733,13 @@ fun FirstScreen(navController: NavHostController) {
 The last thing that we will cover in this post is the async operations. Previously discussed navigation
 libraries ([Decompose](https://github.com/mkonkel/DecomposeNavigation), [Appyx](https://github.com/mkonkel/AppyxNavigation), [Voyager](https://github.com/mkonkel/VoyagerNavigation))
 provided they own business logic container object where async operation can be handled. In the case of JetpackCompose we
-will be using `ViewModels` that recently were moved to compose multiplatform library. 
+will be using `ViewModels` that recently were moved to compose multiplatform library.
 Please keep in mind that Appyx and Voyager still allow to use `ViewModels` if you want to do so.
 
-First thing to add is the proper dependency.
+First thing to add is the proper dependency according to
+the [documentation](https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-viewmodels.html)
+
+```toml
 
 ```yaml
 [versions]
@@ -744,4 +747,66 @@ common-viewmodels = "2.8.0"
 
 [libraries]
 viewmodels-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "common-viewmodels" }
-``
+```
+
+```kotlin
+commonMain.dependencies {
+    ...
+    implementation(libs.viewmodels.compose)
+}
+```
+
+The general usage of the `ViewModel` is quite simple and similar to the android approach. We need to create a class that
+extends the `ViewModel` and then put the logic there.
+The `ViewModel` offer us a `viewModelScope` that is a `CoroutineScope` that is bound to the lifecycle of
+the `ViewModel`. It means that when the `ViewModel` is destroyed all the coroutines that are launched in
+the `viewModelScope` will be cancelled.
+Therefore, we can easily use it to handle the async operations.
+
+Let's create a simple `ViewModel` that will handle the countdown timer and corresponding `Eleventh` screen for
+displaying the values.
+
+```kotlin
+class EleventhViewModel : ViewModel() {
+    private val _countDownText = MutableStateFlow("")
+    val countDownText: StateFlow<String> = _countDownText.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            for (i in 10 downTo 0) {
+                _countDownText.value = i.toString()
+                delay(1000)
+            }
+        }
+    }
+}
+```
+
+To use the `ViewModel` we can use the `viewModel` function that is provided by the `lifecycle-viewmodel-compose`library.
+The function returns existing view model or creates new one in the scope. The crated `ViewModel` is bound to
+the `viewModelStoreOwner` nd will be retained as long as the scope is alive.
+
+The source code of the `Eleventh` screen is quite simple and looks as all previously created screens.
+
+```kotlin
+@Composable
+fun EleventhScreen(
+    navController: NavHostController,
+    viewModel: EleventhViewModel = viewModel { EleventhViewModel() },
+) {
+    Column(...) {
+        ..
+        Countdown(viewModel)
+    }
+}
+
+@Composable
+private fun Countdown(viewModel: EleventhViewModel) {
+    val countdownText = viewModel.countDownText.collectAsState().value
+    Text("COUNTDOWN: $countdownText")
+}
+```
+
+After adding the created screen to the navigation, we can launch it from the `Forst` screen end examine the countdown functionality.
+
+![Coroutines Support](/blog/coroutines_support_6.gif "coroutines support gif")
