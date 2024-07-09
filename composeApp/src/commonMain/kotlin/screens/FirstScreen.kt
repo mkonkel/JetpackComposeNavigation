@@ -48,5 +48,9 @@ fun FirstScreen(navController: NavHostController) {
         Button(onClick = { navController.navigate(Screen.Eighth) }) {
             Text("Bottom")
         }
+
+        Button(onClick = { navController.navigate(Screen.Eleventh) }) {
+            Text("Countdown")
+        }
     }
 }

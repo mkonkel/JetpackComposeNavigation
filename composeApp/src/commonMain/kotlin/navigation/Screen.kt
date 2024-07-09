@@ -41,4 +41,7 @@ sealed class Screen {
             }
         }
     }
+
+    @Serializable
+    data object Eleventh : Screen()
 }

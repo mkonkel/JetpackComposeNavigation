@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.toRoute
+import screens.EleventhScreen
 import screens.FirstScreen
 import screens.FourthScreen
 import screens.SecondScreen
@@ -45,6 +46,10 @@ fun NavGraphBuilder.main(navController: NavHostController) {
 
         composable<Screen.Eighth> {
             EighthScreen()
+        }
+
+        composable<Screen.Eleventh> {
+            EleventhScreen(navController)
         }
     }
 }
