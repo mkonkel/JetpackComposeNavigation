@@ -559,7 +559,8 @@ fun SixthScreen(...) {
 }
 ```
 
-You can mix the functions as much as you want to achieve desired behaviour, for example you can `pop` screen before entering a new
+You can mix the functions as much as you want to achieve desired behaviour, for example you can `pop` screen before
+entering a new
 one, drop whole graphs and more - it's a flexible solution.
 
 ![Nested Graphs](/blog/nested_graphs_4.gif "nested graphs gif")
@@ -567,10 +568,10 @@ one, drop whole graphs and more - it's a flexible solution.
 ### Bottom Navigation
 
 Yet another thing that is widely common in mobile apps nowadays is the bottom navigation. Let's extend the project with
-one more feature!  We need to add three new screens. `EighthScreen` which will be the main screen that holds bottom
-menu, and it's a container for the tabs `NinthScreen` and `TenthScreen`.
-Inside the `EighthScreen` we will add a new `NavHost` that will build its own graph and will be handling switching tabs.
-We will be also using the `BottomNavigation` control to create the bottom bar and it's items.
+one more feature! We need to add three new screens. `Eighth` screen which will be the main screen that holds bottom
+menu, and it's a container for the tabs: `Ninth` screen and `Tenth` screen.
+Inside the `Eighth` screen we will add a new `NavHost` that will build its own graph and will handle switching tabs.
+We will be also using the `BottomNavigation` jetpack compose control to create the bottom bar view and it's items.
 
 ```kotlin
 @Composable
@@ -586,13 +587,13 @@ fun EighthScreen() {
         NavHost(
             modifier = Modifier.padding(innerPadding),
             navController = navController,
-            startDestination = Screen.Tab.NinthScreen.route,
+            startDestination = Screen.Eighth.Tab.Home,
         ) {
-            composable(route = Screen.Tab.NinthScreen.route) {
+            composable<Screen.Eighth.Tab.Home> {
                 NinthScreen()
             }
 
-            composable(route = Screen.Tab.TenthScreen.route) {
+            composable<Screen.Eighth.Tab.Edit> {
                 TenthScreen()
             }
         }
@@ -600,20 +601,35 @@ fun EighthScreen() {
 }
 ```
 
-The nev `NavHost` has its own `navController` and `startDestination`. When we enter the item displayed in the first tab
-will be always the `NinthScreen`.
-The local `navController` will be used to navigate between tabs. The `BottomNavigation` control its quite helpful it
-will render the bottom bar with necessary elements such as **icon**, **label** and **selected** state.
-But to do so we need to provide the info about the tabs. Like in every other type of navigation the displayed screens
-need their own `route`, so we can to create a new `sealed class` for the tabs inside current `Screen.kt`
+The nev `NavHost` has its own `navController` and `startDestination`. When we enter the screen the item displayed as a
+first tab will always be the `Ninth` screen.
+The local `navController` is used to navigate between tabs. The `BottomNavigation` control its quite helpful. It
+will render the bottom bar with necessary elements such as **icon**, **label** and **selected** state, and even adds
+slight dim to the selected item.
+But to do so we need to provide the information about the tabs. Like in every other type of navigation the displayed
+screens
+need their own `route`/`destination`, so we can to create a new `sealed class` for the tabs inside current `Screen.kt`
+file.
 
 ```kotlin
-    sealed class Screen(val route: String) {
+@Serializable
+sealed class Screen {
     ...
-    data object EighthScreen : Screen(route = "eighthScreen")
-    sealed class Tab(route: String, val icon: ImageVector, val label: String) : Screen(route) {
-        data object NinthScreen : Tab(route = "ninthScreen", icon = Icons.Default.Home, label = "Ninth")
-        data object TenthScreen : Tab(route = "tenthScreen", icon = Icons.Default.Edit, label = "Tenth")
+    @Serializable
+    data object Eighth : Screen() {
+        @Serializable
+        sealed class Tab(val icon: ICON, val label: String) : Screen() {
+            @Serializable
+            data object Home : Tab(icon = ICON.HOME, label = "Home")
+
+            @Serializable
+            data object Edit : Tab(icon = ICON.EDIT, label = "Edit")
+
+            @Serializable
+            enum class ICON {
+                HOME, EDIT
+            }
+        }
     }
 }
 ```
@@ -622,97 +638,11 @@ Now we can create the bottom navigation tabs.
 
 ```kotlin
 @Composable
-fun BottomBar(navController: NavHostController) {
+@Composable
+private fun BottomBar(navController: NavHostController) {
     val tabs = listOf(
-        Screen.Tab.NinthScreen,
-        Screen.Tab.TenthScreen,
-    )
-
-    val backstackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = backstackEntry?.destination
-
-    BottomNavigation {
-        // TODO add UI representation of the bottom menu items that will change the tabs
-    }
-}
-```
-
-The `BottomBar` is a composable responsible for handling the elements inside tabs container. We need to specify the
-elements (in our case `tabs`) that are available in the bottom bar. We are also using
-the `currentBackStackEntryAsState()` to get the current destination - the value is updated with every `navControler`
-changes due to `navigate()` or `pop()` functions which are triggering the recomposition, as a result the top entry on
-the backstack is returned - so we will know what is currently displayed, and can retrieve the `destination` that
-contains a `route` and other information about the screen.
-
-The `BottomNavigation` control takes a few of parameters, and the last one is the `content` that will be displayed in
-the bottom navigation items - so for each tab that we want to display we should create proper UI element.
-We can create an extension function for `RowScope` that will create the `BottomNavigationItem` for each tab and provide
-necessary data.
-
-```kotlin
-@Composable
-fun RowScope.TabItem(
-    tab: Screen.Tab,
-    currentDestination: NavDestination?,
-    navController: NavHostController,
-) {
-    BottomNavigationItem(
-        icon = { Icon(imageVector = tab.icon, contentDescription = "navigation_icon_${tab.label}") },
-        label = { Text(tab.label) },
-        selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
-        onClick = {
-            navController.navigate(tab.route) {
-                navController.graph.startDestinationRoute?.let { popUpTo(it) }
-                launchSingleTop = true
-            }
-        },
-    )
-}
-```
-
-The `BottomNavigationItem` allow us to customize the view of the tab. We can provide the `icon`, `label`, `selected`
-state and `onClick` action.
-The `selected` state is calculated by checking if the current destination is the same as the tab route of the item.
-The `onClick` action is responsible for navigating to the clicked tab.
-
-Since we want only one active screen inside the tabs container we need `pop` to it causing dropping other element from
-the back stack. We can also add the `launchSingleTop` which will ensure that the is not preserved, and will be
-recreated.
-
-Wrapping things up, we should have the `EighthScreen` built like that
-
-```kotlin
-@Composable
-fun EighthScreen() {
-    val navController = rememberNavController()
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        bottomBar = {
-            BottomBar(navController)
-        },
-    ) { innerPadding ->
-        NavHost(
-            modifier = Modifier.padding(innerPadding),
-            navController = navController,
-            startDestination = Screen.Tab.NinthScreen.route,
-        ) {
-            composable(route = Screen.Tab.NinthScreen.route) {
-                NinthScreen()
-            }
-
-            composable(route = Screen.Tab.TenthScreen.route) {
-                TenthScreen()
-            }
-        }
-    }
-}
-
-@Composable
-fun BottomBar(navController: NavHostController) {
-    val tabs = listOf(
-        Screen.Tab.NinthScreen,
-        Screen.Tab.TenthScreen,
+        Screen.Eighth.Tab.Home,
+        Screen.Eighth.Tab.Edit,
     )
 
     val backstackEntry by navController.currentBackStackEntryAsState()
@@ -724,34 +654,74 @@ fun BottomBar(navController: NavHostController) {
         }
     }
 }
+```
 
+The `BottomBar` is a composable function responsible for handling the elements inside tabs container. We need to specify
+the elements (in our case `tabs`) that are available in the bottom bar. We are also using
+the `currentBackStackEntryAsState()` to get the current destination - the value is updated with every `navControler`
+changes due to `navigate()` or `pop()` functions calls which are triggering the recomposition. As a result the top entry
+on
+the backstack is returned - so we will know what is currently displayed, and we can retrieve the `destination` that
+contains information about the screen.
+
+The `BottomNavigation` control takes a few parameters, and the last one is
+the `content: @Composable RowScope.() -> Unit` whuch will be responsible for
+creating the bottom navigation view. For each tab that we want to display we should create proper UI element.
+We can create an extension function for `RowScope` that will be responsible for providing the `BottomNavigationItem` for
+each tab.
+
+```kotlin
 @Composable
-fun RowScope.TabItem(
-    tab: Screen.Tab,
+private fun RowScope.TabItem(
+    tab: Screen.Eighth.Tab,
     currentDestination: NavDestination?,
     navController: NavHostController,
 ) {
     BottomNavigationItem(
-        icon = { Icon(imageVector = tab.icon, contentDescription = "navigation_icon_${tab.label}") },
+        icon = { Icon(imageVector = tab.icon.toVector(), contentDescription = "navigation_icon_${tab.label}") },
         label = { Text(tab.label) },
-        selected = currentDestination?.hierarchy?.any { it.route == tab.route } == true,
+        selected = currentDestination?.hierarchy?.any { it == tab } == true,
         onClick = {
-            navController.navigate(tab.route) {
+            navController.navigate(tab) {
                 navController.graph.startDestinationRoute?.let { popUpTo(it) }
                 launchSingleTop = true
             }
         },
     )
 }
+
+// helper function for transforming enum to vectorIcon
+private fun Screen.Eighth.Tab.ICON.toVector() = when (this) {
+    Screen.Eighth.Tab.ICON.HOME -> Icons.Default.Home
+    Screen.Eighth.Tab.ICON.EDIT -> Icons.Default.Edit
+}
 ```
+
+The `selected` state is calculated by checking if the current destination is the same as the tab the current item.
+The `onClick` action is responsible for navigating to the clicked tab.
+
+Since we want only one active screen inside the tabs container we need to `pop` it. This will cause dropping other
+element from
+the back stack. We can also add the `launchSingleTop` which will ensure that the tab is not preserved, and will be
+recreated with every click.
 
 Last thing to do is to add an entrypoint in the `main` graph.
 
 ```kotlin
 fun NavGraphBuilder.main(navController: NavHostController) {
     ...
-    composable(route = Screen.EighthScreen.route) {
+    composable<Screen.Eighth> {
         EighthScreen()
+    }
+}
+```
+
+```kotlin
+@Composable
+fun FirstScreen(navController: NavHostController) {
+    ...
+    Button(onClick = { navController.navigate(Screen.Eighth) }) {
+        Text("Bottom")
     }
 }
 ```
@@ -760,10 +730,9 @@ fun NavGraphBuilder.main(navController: NavHostController) {
 
 ### Async Operations
 
-The last thing that we will cover in this post is the async operations. All previously discussed navigation
-frameworks ([Decompose](https://github.com/mkonkel/DecomposeNavigation), [Appyx](https://github.com/mkonkel/AppyxNavigation), [Voyager](https://github.com/mkonkel/VoyagerNavigation))
-provided they own business logic container where async operation can be handled.
-In the case of JetpackCompose we will be using `ViewModels` that recently were moved compose multiplatform library,
-please keep in mind that Appyc and Voyager still allow to use `ViewModels` even if they provide their own implementation
-of similar concept.
+The last thing that we will cover in this post is the async operations. Previously discussed navigation
+libraries ([Decompose](https://github.com/mkonkel/DecomposeNavigation), [Appyx](https://github.com/mkonkel/AppyxNavigation), [Voyager](https://github.com/mkonkel/VoyagerNavigation))
+provided they own business logic container object where async operation can be handled. In the case of JetpackCompose we
+will be using `ViewModels` that recently were moved to compose multiplatform library. 
+Please keep in mind that Appyx and Voyager still allow to use `ViewModels` if you want to do so.
 

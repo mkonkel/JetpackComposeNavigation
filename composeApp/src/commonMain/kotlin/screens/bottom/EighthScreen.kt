@@ -85,6 +85,7 @@ private fun RowScope.TabItem(
     )
 }
 
+// helper function for transforming enum to vectorIcon
 private fun Screen.Eighth.Tab.ICON.toVector() = when (this) {
     Screen.Eighth.Tab.ICON.HOME -> Icons.Default.Home
     Screen.Eighth.Tab.ICON.EDIT -> Icons.Default.Edit
