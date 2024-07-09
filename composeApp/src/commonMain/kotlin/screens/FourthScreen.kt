@@ -24,8 +24,10 @@ fun FourthScreen(navController: NavHostController, name: String, surname: String
         Text("Fourth screen")
         Spacer(modifier = Modifier.height(16.dp))
         Text("Name: $name")
-        Text("Surname: $surname")
-        Spacer(modifier = Modifier.height(16.dp))
+        surname?.let { value ->
+            Text("Surname: $value")
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         Button(onClick = { navController.popBackStack() }) {
             Text("Go Back")
         }

@@ -29,7 +29,8 @@ the [Voyager](https://github.com/mkonkel/VoyagerNavigation), [Apyx](https://gith
 >
 >> 05.07.2024 edit:
 >>
->> Good news are that the new version of compose multiplatform is available the `1.7.0-alpha01` and it brings the `Safe Args`!
+>> Good news are that the new version of compose multiplatform is available the `1.7.0-alpha01` and it brings
+> > the `Safe Args`!
 
 Base project setup as always is made with [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com), we also need to add
 some [navigation-compose](https://developer.android.com/develop/ui/compose/navigation) as it is the core
@@ -74,13 +75,25 @@ sourceSets {
 ### Linear Navigation
 
 Getting started. The question is how do the navigation know where to go - it's simple, every destination has its own
-unique `route` (that can be simply described as a URL address) that defines current screen. The destination in most
-cases will be a composable function that will be displayed on the screen.
+unique identification that defines current screen. The destination in most cases will be a composable function that will
+be displayed on the screen.
+
+> Note:
+>
+> In previous versions of navigation the route was defined as a string (you can think of it as the URL address).
+> But now we have more robust approach where we can pass an Object/Class/KClass<T> as a destination as log as they are
+> serializable.
+
+Let's start with the `Screen` sealed class that will hold the destinations.
 
 ```kotlin
-sealed class Screen(val route: String) {
-    data object FirstScreen : Screen("firstScreen")
-    data object SecondScreen : Screen("secondScreen")
+@Serializable
+sealed class Screen {
+    @Serializable
+    data object First : Screen()
+
+    @Serializable
+    data object Second : Screen()
 }
 ```
 
@@ -96,20 +109,22 @@ fun Navigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.FirstScreen.route
+        startDestination = Screen.First,
     ) {
-        composable(route = Screen.FirstScreen.route) {
-            ...
+        composable<Screen.First> {
+            FirstScreen(navController)
         }
-        composable(route = Screen.SecondScreen.route) {
-            ...
+
+        composable<Screen.Second> {
+            SecondScreen(navController)
         }
     }
 }
 ```
 
-With the frame built we should implement some screens. The `FirstScreen` will be a simple screen with a button that will
-navigate to the `SecondScreen`.
+With the navigation frame built we should implement some screens. The `First` screen will be really simple with a single
+button that will navigate to the `Second` screen. The `Second` screen will be also simple with a button that will
+navigate back.
 
 ```kotlin
 @Composable
@@ -149,15 +164,15 @@ We left some TODOs in the screens. If we want to navigate from screen to screen 
 input to our composable and then call `navigate()` method and `popBackStack()` to go back.
 
 ```kotlin
-Button(onClick = { navController.navigate(Screen.SecondScreen.route) }) { Text("Second Screen") }
+Button(onClick = { navController.navigate(Screen.Second) }) { Text("Second Screen") }
 ```
 
 ```kotlin
 Button(onClick = { navController.popBackStack() }) { Text("Go Back") }
 ```
 
-After all that we neet to use our `Navigation()` function in the application entrypoint, for andorid it is
-the `MainActivity.kt` and for iOS it is the `MainViewController.kt`.
+With the initial setup made, all that left is to use `Navigation()` function in the application entrypoint.
+The `MainActivity.kt` for android and for iOS it is the `MainViewController.kt`.
 
 ```kotlin
 class MainActivity : ComponentActivity() {
@@ -175,8 +190,8 @@ class MainActivity : ComponentActivity() {
 fun MainViewController() = ComposeUIViewController { Navigation() }
 ```
 
-After running the application we should see the `FirstScreen` with a button that navigates to the `SecondScreen` and a
-button that navigates back to the `FirstScreen`.
+After running the application we should see the `First` scree with a button that navigates to the `Second` screen and a
+button that navigates back to the `First` screen.
 
 ![Linear Navigation](/blog/linear_navigation_1.gif "linear navigation gif")
 
@@ -184,49 +199,68 @@ button that navigates back to the `FirstScreen`.
 
 > Note:
 >
-> The recent release
-> of [JetpackNavigation](https://developer.android.com/jetpack/androidx/releases/navigation#2.8.0-alpha08)
-> adds `Safe Args`
-> which is a convenient way of passing parameters. Which is not available yet in compose multiplatform `1.6.11`.
+> Now with Safe Args passing values is easy, but with the previous release passing arguments was tricky.
+> Since the route looks like the URL address required arguments should be passed as a `path` in route and the optional
+> as `query`
+>
 
-There are two types of arguments **required*** and **optional**, optionals should be created with a default value. As
-said at the beginning the route looks like the URL address, so we will be passing the parameters as a parts of the
-route. We can pass a single or a multiple arguments.
-Required arguments should be passed as a `path` in route. Let's create third screen that will accept the `greetings`
-parameter.
+With the `Safe Args` we can pass parameters as the part of the destination object which is easy and convenient, there
+are two types of arguments **required*** and **optional**
 
 #### Required Arguments
 
 ```kotlin
-sealed class Screen(val route: String) {
+@Serializable
+sealed class Screen {
     ...
-    data object ThirdScreen : Screen("thirdScreen/{greetings}")
+    @Serializable
+    data class Third(val greeting: String) : Screen()
 }
 ```
 
 Now we need to create the `ThirdScreen` composable function that will accept the `greetings` parameter and provide a way
 to pass the arguments.
-Since `safe args` are not there, we need to use `NavArgumentBuilder` and explicit define the type of the argument and of
-course provide the key for it.
+Since the `composable<T>()` is a typed function where `T` is route from a `KClass` for the destination we can use
+the `.toRoute<T>()` function. This extension function returns route as an object of type `T`. From now we can extract
+the arguments from the passed class.
+and as we know what type of the class it is we also know what type the arguments are.
+
+> Note:
+>
+> Before `Safe Args` we needed to use `NavArgumentBuilder` and explicit define the type of the argument and the key for
+> the argument.
+> ```kotlin
+> composable(
+>   route = Screen.ThirdScreen.route,
+>   arguments = listOf(navArgument("greetings") { type = NavType.StringType }
+> ) {
+>      ThirdScreen(navController, it.arguments?.getString("greetings").orEmpty())
+>  }
+> ```
+> And you can clearly see that it was a mess
+
+Since we know that the passing argument is a `String` we can extract it from the route and pass it to the `Third` screen
+composable.
 
 ```kotlin
 @Composable
 fun Navigation() {
     NavHost(...) {
         ...
-        composable(
-            route = Screen.ThirdScreen.route,
-            arguments = listOf(navArgument("greetings") {
-                type = NavType.StringType
-            })
-        ) {
-            ThirdScreen(navController)
+        composable<Screen.Third> {
+            val args = it.toRoute<Screen.Third>()
+
+            ThirdScreen(
+                navController = navController,
+                greetings = args.greeting
+            )
         }
     }
-}
 ```
 
-Let's modify the `FirstScreen` to navigate to the `ThirdScreen` with the greetings parameter.
+Let's modify the `First` screen to navigate to the `Third` screen with the greetings' parameter as an argument of the
+data
+class.
 
 ```kotlin
 @Composable
@@ -235,25 +269,15 @@ fun FirstScreen(navController: NavHostController) {
     Button(
         onClick = {
             val greetings = "Hello from First Screen"
-            navController.navigate("thirdScreen/$greetings")
+            navController.navigate(Screen.Third(greetings))
         }
     ) {
         Text("Third Screen")
     }
 }
-} 
 ```
 
-We have got the function to call a screen with the argument, now we need to extract the argument from the route and pass
-it to the `ThirdScreen` composable.
-We need to modify the `ThirdScreen` to accept the `greetings` parameter, and `Navigation` to extract the argument from
-the route.
-
-```kotlin
-        composable(...) {
-    ThirdScreen(navController, it.arguments?.getString("greetings").orEmpty())
-}
-```
+The `Third` screen should be built in a same way as the `Second` screen but with a proper parameters passed.
 
 ```kotlin
 @Composable
@@ -276,111 +300,71 @@ fun ThirdScreen(navController: NavHostController, greetings: String) {
 
 ![Required Argument](/blog/arguments_2.gif "required argument gif")
 
-There is always place for improvement, we can adjust the `Screen` class to use some const values and functions to help
-us with providing right paths and extracting the arguments instead of writing them manually one by one.
-
-```kotlin
-sealed class Screen(val route: String) {
-    ...
-    data object ThirdScreen : Screen(route = "thirdScreen/{${ARGUMENTS.GREETING}}") {
-        fun withGreetings(greeting: String) = route.replaceArgumentWithValue(ARGUMENTS.GREETING, greeting)
-
-        object ARGUMENTS {
-            const val GREETING = "greeting"
-        }
-    }
-
-    internal fun String.replaceArgumentWithValue(argument: String, value: String) = this.replace("{$argument}", value)
-}
-```
-
-We have got a basic route with a single argument, but what if we want to pass multiple arguments? We need to follow same
-rules as with one argument - just extend the route with more parts and handle them in `Navigation` and in the desired
-screens.
-
 #### Optional Arguments
 
-For optional arguments we will follow same idea as with required arguments. They should be passed as query in the URL
-address. They should be preceded by a `?` character and follow the pattern `?key=value`, and if you want to pass
-multiple optional parameters they have to be separated with `&` character `?key1=value1&key2=value2`.
-You need to remember that for optional argument you need to provide a default value or mark argument as nullable
-Let's create the `FourthScreen` that will accept the optional `name` and optional (but nullable) `surname` parameters.
+For optional arguments we will follow same idea as with required arguments.
+
+> Noge :
+>
+> With the `Safe Args` it's easy to pass optional arguments. In previous versions we needed to use `query` parameters
+> Where arguments should be passed in the `route` and preceded by a `?` character following the pattern `?key=value`,
+> and if you want to pass multiple optional parameters they have to be separated with `&`
+> character `?key1=value1&key2=value2`. Also the
+> optional parameters has to be provided with the default value
+
+Lets create the `Fourth` screen that will have two optional arguments `name` and `surname`.
 
 ```kotlin
-data object FourthScreen : Screen(
-    route = "fourthScreen"
-            + "?${ARGUMENTS.NAME}={${ARGUMENTS.NAME}}"
-            + "&${ARGUMENTS.SURNAME}={${ARGUMENTS.SURNAME}}"
-) {
-    fun withName(name: String) = route.replaceArgumentWithValue(ARGUMENTS.NAME, name)
-
-    fun withNameAndSurname(name: String, surname: String) = route
-        .replaceArgumentWithValue(ARGUMENTS.NAME, name)
-        .replaceArgumentWithValue(ARGUMENTS.SURNAME, surname)
-
-    object ARGUMENTS {
-        const val NAME = "name"
-        const val SURNAME = "surname"
-    }
-}
+@Serializable
+data class Fourth(val name: String, val surname: String? = null) : Screen()
 ```
 
+Now we need to create the `Fourth` screen composable function that will accept the `name` and `surname` parameters.
+
 ```kotlin
-composable(
-    route = Screen.FourthScreen.route,
-    arguments = listOf(
-        navArgument(Screen.FourthScreen.ARGUMENTS.NAME) {
-            type = NavType.StringType
-            defaultValue = ""
-        },
-        navArgument(Screen.FourthScreen.ARGUMENTS.SURNAME) {
-            type = NavType.StringType
-            defaultValue = null
-            nullable = true
-        },
-    )
-) {
+composable<Screen.Fourth> {
+    val args = it.toRoute<Screen.Fourth>()
+
     FourthScreen(
-        navController,
-        requireNotNull(it.arguments?.getString(Screen.FourthScreen.ARGUMENTS.NAME)),
-        it.arguments?.getString(Screen.FourthScreen.ARGUMENTS.SURNAME),
+        navController = navController,
+        name = args.name,
+        surname = args.surname
     )
-}
-```
-
-```kotlin
-fun FirstScreen(navController: NavHostController) {
-    ...
-    Button(
-        onClick = {
-            navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe"))
-        }
-    ) {
-        Text("John Doe Screen")
-    }
-
-    Button(
-        onClick = {
-            navController.navigate(Screen.FourthScreen.withName("Michael"))
-        }
-    ) {
-        Text("Michael Screen")
-    }
 }
 ```
 
 The FourthScreen should be built in a same way as ThordScreen with proper parameters passed.
+
+```kotlin
+@Composable
+fun FourthScreen(navController: NavHostController, name: String, surname: String?) {
+    ...
+}
+```
+
+Navigation is as simple as it can possibly be:
+
+```kotlin
+fun FirstScreen(navController: NavHostController) {
+    Button(onClick = { navController.navigate(Screen.Fourth(name = "John", surname = "Doe")) }) {
+        Text("John Doe Screen")
+    }
+
+    Button(onClick = { navController.navigate(Screen.Fourth(name = "Michael")) }) {
+        Text("Michael Screen")
+    }
+}
+```
 
 ![Optional Arguments](/blog/arguments_3.gif "optional argument gif")
 
 ### Nested Navigation
 
 In case of complex applications splitting navigation into smaller parts is a good idea. Currently, we have one `NavHost`
-with all screens originating from the same place.
-Which is not a problem for a small application, but in case of a bigger one it can be a mess. We can split the
-navigation into smaller parts that will be encapsulated according to their purpose.
-We can create a `Fifth` and `Sixth` screen that will separate from main navigation and will be accessible only from
-the `ThirdScreen`. The graph for such screens will look like this:
+with all screens originating from the same place. We can divide the navigation into smaller parts that will be
+encapsulated according to their purpose.
+Let's create a `Fifth` and `Sixth` screen that will separate from main navigation and will be accessible only from
+the `Third` screen. The graph for such screens will look like this:
 
 ```mermaid
   graph TD
@@ -397,24 +381,31 @@ the `ThirdScreen`. The graph for such screens will look like this:
 
 With such structured navigation we can easily manage the navigation and the screens. We can create a `NestedNavigation`
 composable function that will hold the `NavHost` and `navigationController` for the nested navigation.
-Closing the `ThirdScreen` will trigger removing all its children from the backstack and they won;t be accessible
-anymore. It's a great tool for structuring processes in the application - when a process is finished (a signup, a
-payment, a tutorial) we can close the process and remove all its children from the backstack easily.
+When we close the `Third` screen navigation will remove all its children from the backstack and they won't be accessible
+anymore.
+It's a great tool for structuring processes in the application - when a process is finished (for example a signup, a
+payment or a tutorial).
 
 > If you read my post about navigation [Decompose](https://github.com/mkonkel/DecomposeNavigation) you can see
 > similarities in the approach. In Decompose every component can have its own stack and manage it.
 
-Adding nested navigation graph is done by using the `navigation()` function in the `NavHost` composable.
-The `navigation()` function takes the `startDestination` and the `route`. The `route` is a unique name of the nested
+Adding the nested navigation graph is done by using the `navigation()` function in the `NavHost` composable.
+The `navigation()` function takes the `startDestination` and the `route`. The `route` is a unique name (or object) of
+the nested
 navigation graph to distinguish it from other graphs. The `startDestination` is the screen that will be displayed when
 the nested graph is opened.
-We can also add the `route` parameter to `NavHost` to be cristal clear which screen is where.
 
 ```kotlin 
-private object ROUTE {
-    const val ROOT = "root"
-    const val NESTED = "nested"
-    const val MAIN = "main" // will be used in a while
+@Serializable
+sealed class Route {
+    @Serializable
+    data object Root : Route()
+
+    @Serializable
+    data object Main : Route()
+
+    @Serializable
+    data object Nested : Route()
 }
 
 @Composable
@@ -422,29 +413,34 @@ fun Navigation() {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.FirstScreen.route,
-        route = ROUTE.ROOT
+        startDestination = Screen.First,
+        route = Route.Root::class
     ) {
         ...
         navigation(
-            startDestination = Screen.ThirdScreen.route,
-            route = ROUTE.NESTED
+            startDestination = Screen.Fifth,
+            route = Route.Nested::class
         ) {
-            composable(route = Screen.FifthScreen.route) {
+            composable<Screen.Fifth> {
                 FifthScreen(navController)
             }
 
-            composable(route = Screen.SixthScreen.route) {
+            composable<Screen.Sixth> {
                 SixthScreen(navController)
+            }
+
+            composable<Screen.Seventh> {
+                SeventhScreen(navController)
             }
         }
     }
 }
 ```
 
-To clarify the navigation we can split the `Navigation()` function into separate components. One handling `home` and
-second handling `nested` graphs.
-To do so we need to create extension functions for `NavGraphBuilder` that will result in graph changes:
+To clarify the navigation we can split the `Navigation()` function into separate components, first will handle `maib`
+graph and
+second the `nested` graph. To do so we need to create extension functions for `NavGraphBuilder` that will hold specific
+screens which will result in such graph changes:
 
 ```mermaid
   graph TD
@@ -464,8 +460,8 @@ To do so we need to create extension functions for `NavGraphBuilder` that will r
 ```kotlin
 fun NavGraphBuilder.nested(navController: NavHostController) {
     navigation(
-        startDestination = Screen.ThirdScreen.route,
-        route = ROUTE.NESTED
+        startDestination = Screen.Fifth,
+        route = Route.Nested::class
     ) {
         // code for nested navigation
     }
@@ -475,8 +471,8 @@ fun NavGraphBuilder.nested(navController: NavHostController) {
 ```kotlin
 fun NavGraphBuilder.main(navController: NavHostController) {
     navigation(
-        startDestination = Screen.SixthScreen.route,
-        route = ROUTE.MAIN
+        startDestination = Screen.First,
+        route = Route.Main::class
     ) {
         // code for main navigation
     }
@@ -490,8 +486,8 @@ fun Navigation() {
 
     NavHost(
         navController = navController,
-        startDestination = ROUTE.MAIN,
-        route = ROUTE.ROOT
+        startDestination = Route.Main,
+        route = Route.Root::class
     ) {
         main(navController)
         nested(navController)
@@ -502,41 +498,33 @@ fun Navigation() {
 ```kotlin
 fun FirstScreen(navController: NavHostController) {
     ...
-    Button(
-        onClick = {
-            navController.navigate(ROUTE.NESTED)
-        }
-    ) {
+    Button(onClick = { navController.navigate(Route.Nested) }) {
         Text("Nested")
     }
 }
 ```
 
-With such changes we still can navigate between graphs. There is no problem calling the `FourtsScreen` from nested
-graph. The `SixthScreen` will open a `FourthScreen`.
+With such changes we still can navigate between graphs. There is no problem calling the `Fourth` screen from nested
+graph. Let's try to achieve that by adding a way for the `Sixth` screen to open a `Fourth` screen.
 
 ```kotlin
 @Composable
 fun SixthScreen(navController: NavHostController) {
     ...
-    Button(
-        onClick = {
-            navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe"))
+    Button(onClick = {
+        navController.navigate(Screen.Fourth("John", "Doe")) {
+            Text("John Doe Screen")
         }
-    ) {
-        Text("John Doe Screen")
     }
-}
-}
 ```
 
-We can now modify the `FourthScreen` and add a button that will navigate back to `MAIN` route instead of the popping
-back the stack.
-But we would like to close the `NESTED` graph and remove all its children from the backstack, so we will not navigate to
-the screen but to the graph route.
-The `navigate()` builder has a `popUpTo` method that allows us to remove the screens from the backstack. We can pass the
-route to which we want to pop back to. There is also the `inclusive` parameter to remove the passed route from the
-backstack - but we will not use it in this example.
+We can now modify the `Fourth` screen and add a button that will navigate back to `MAIN` graph instead of the popping
+back the stack, so we can close the `NESTED` graph immediately and dispose all its children screens from the backstack.
+The `navigate()` builder has a `popUpTo()` method that allows to remove the destinations from the backstack. We can pass
+the
+destination to which we want to pop back to. There is also the `inclusive` parameter to remove the passed destination
+from the
+backstack as well.
 
 ```kotlin
 @Composable
@@ -544,18 +532,17 @@ fun FourthScreen(...) {
     ...
     Button(
         onClick = {
-            navController.navigate(ROUTE.MAIN) {
-                popUpTo(ROUTE.MAIN) // results in closing the NESTED graph
+            navController.navigate(Route.Main) {
+                popUpTo(Route.Main)
             }
         }
     ) {
         Text("MAIN")
     }
 }
-}
 ```
 
-We can close the `NESTED` graph even quicker, while opening the `FourthScreen` from the `SixthScreen` all we need to do
+We can close the `NESTED` graph even quicker, while opening the `Fourth` screen from the `Sixth` all we need to do
 is use `popUpTo()` method with the `ROUTE.NESTED` parameter.
 
 ```kotlin
@@ -563,18 +550,17 @@ is use `popUpTo()` method with the `ROUTE.NESTED` parameter.
 fun SixthScreen(...) {
     ...
     Button(onClick = {
-        navController.navigate(Screen.FourthScreen.withNameAndSurname("John", "Doe")) {
-            popUpTo(ROUTE.NESTED)
+        navController.navigate(Screen.Fourth("John", "Doe")) {
+            popUpTo(Route.Nested)
         }
     }) {
         Text("John Doe Screen")
     }
 }
-}
 ```
 
-You can mix the functions as much as you want to achieve desired behaviour. You can `pop` screen before entering a new
-one, drop whole graphs and more - it;s a flexible solution.
+You can mix the functions as much as you want to achieve desired behaviour, for example you can `pop` screen before entering a new
+one, drop whole graphs and more - it's a flexible solution.
 
 ![Nested Graphs](/blog/nested_graphs_4.gif "nested graphs gif")
 

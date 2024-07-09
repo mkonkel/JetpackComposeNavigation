@@ -20,9 +20,7 @@ fun FirstScreen(navController: NavHostController) {
         verticalArrangement = Arrangement.Center
     ) {
         Text("First screen")
-        Button(
-            onClick = { navController.navigate(Screen.Second) }
-        ) {
+        Button(onClick = { navController.navigate(Screen.Second) }) {
             Text("Second Screen")
         }
 
@@ -35,35 +33,19 @@ fun FirstScreen(navController: NavHostController) {
             Text("Third Screen")
         }
 
-        Button(
-            onClick = {
-                navController.navigate(Screen.Fourth("John", "Doe"))
-            }
-        ) {
+        Button(onClick = { navController.navigate(Screen.Fourth(name = "John", surname = "Doe")) }) {
             Text("John Doe Screen")
         }
 
-        Button(
-            onClick = {
-                navController.navigate(Screen.Fourth(name = "Michael"))
-            }
-        ) {
+        Button(onClick = { navController.navigate(Screen.Fourth(name = "Michael")) }) {
             Text("Michael Screen")
         }
 
-        Button(
-            onClick = {
-                navController.navigate(Route.Nested)
-            }
-        ) {
+        Button(onClick = { navController.navigate(Route.Nested) }) {
             Text("Nested")
         }
 
-        Button(
-            onClick = {
-                navController.navigate(Screen.Eighth)
-            }
-        ) {
+        Button(onClick = { navController.navigate(Screen.Eighth) }) {
             Text("Bottom")
         }
     }
