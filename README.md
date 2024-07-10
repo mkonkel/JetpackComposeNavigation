@@ -36,7 +36,7 @@ Base project setup as always is made with [Kotlin Multiplatform Wizard](https://
 some [navigation-compose](https://developer.android.com/develop/ui/compose/navigation) as it is the core
 thing that we would like to examine, according to
 the [documentation](https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-navigation-routing.html#sample-project)
-we should use `navigation` in version `2.8.0-alpha08`
+we should use `navigation` in version `2.8.0-alpha08` and kotlinx.serialization.
 
 *libs.versions.toml*
 
