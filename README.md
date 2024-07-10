@@ -807,6 +807,34 @@ private fun Countdown(viewModel: EleventhViewModel) {
 }
 ```
 
-After adding the created screen to the navigation, we can launch it from the `Forst` screen end examine the countdown functionality.
+After adding the created screen to the navigation, we can launch it from the `Forst` screen end examine the countdown
+functionality.
 
 ![Coroutines Support](/blog/coroutines_support_6.gif "coroutines support gif")
+
+## Summary
+
+In this post we covered the basics of the JetpackCompose navigation. The library is well documented and for sure you
+will find a lot of posts/videos and other resources that will help you to understand the navigation better.
+The JetpackCompose navigation is a powerful tool that allows you to create complex navigation structures with ease. The
+library was available for android for a long time, and now it's available for multiplatform projects. The multiplatform
+version of the library is still in alpha version, but in my opinion It's ready to use in production.
+The library is a great choice for developers who want to create modern and complex navigation structures in their
+applications.
+
+In my previous posts I covered
+the [Decompose](https://github.com/mkonkel/DecomposeNavigation), [Appyx](https://github.com/mkonkel/AppyxNavigation), [Voyager](https://github.com/mkonkel/VoyagerNavigation)
+navigation libraries.
+Now I can say that my personal favourite is the `JetpackCompose` navigation as it will be the most popular and widely
+used in the future, with great support from the community and the Jetbrains team.
+The Compose Multiplatform is growing rapidly, and I'm sure that in the near future we will see a lot of great libraries
+and tools that will help us to create modern and complex applications. But all of them are great, and you should choose
+what fits your needs the best.
+
+When I started to write post about [Fullstack Kotlin Developer](https://github.com/mkonkel/GameShop) I was thinking
+about the navigation library that I will use in the project.
+As there were no official/suggested way of handling the navigation in the multiplatform project I chose the `Decompose`
+library, but after the adoption of the `JetpackCompose` navigation, and the `Viewmodels` to `Compose Multiplatform` I
+would definitely recommend it as the best choice your project, and I'm sure that I will use it in all of my future
+projects as well.
+
