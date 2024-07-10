@@ -30,7 +30,7 @@ the [Voyager](https://github.com/mkonkel/VoyagerNavigation), [Apyx](https://gith
 >> 05.07.2024 edit:
 >>
 >> Good news are that the new update of compose multiplatform is available. The version `1.7.0-alpha01` that brings
->> the `Safe Args`!
+> > the `Safe Args`!
 
 Base project setup as always is made with [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com), we also need to add
 some [navigation-compose](https://developer.android.com/develop/ui/compose/navigation) as it is the core
@@ -58,7 +58,7 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 
 Freshly added dependencies needs to be synced with the project and added to the ***build.gradle.kts***
 
-```kotlin 
+```groovy 
 plugins {
     alias(libs.plugins.kotlinSerialization)
 }
@@ -202,7 +202,6 @@ button that navigates back to the `First` screen.
 > Now with Safe Args passing values is easy, but with the previous release passing arguments was tricky.
 > Since the route looks like the URL address required arguments should be passed as a `path` in route and the optional
 > as `query`
->
 
 With the `Safe Args` we can pass parameters as the part of the destination object which is easy and convenient, there
 are two types of arguments **required*** and **optional**
@@ -221,7 +220,7 @@ sealed class Screen {
 Now we need to create the `ThirdScreen` composable function that will accept the `greetings` parameter and provide a way
 to pass the arguments.
 Since the `composable<T>()` is a typed function where `T` is route from a `KClass` for the destination we can use
-the `.toRoute<T>()` function. This extension function returns route as an object of type `T`. From now we can extract
+the `.toRoute<T>()` function. This extension function returns route as an object of type `T`. From now, we can extract
 the arguments from the passed class.
 and as we know what type of the class it is we also know what type the arguments are.
 
@@ -256,6 +255,7 @@ fun Navigation() {
             )
         }
     }
+}
 ```
 
 Let's modify the `First` screen to navigate to the `Third` screen with the greetings' parameter as an argument of the
@@ -309,10 +309,9 @@ For optional arguments we will follow same idea as with required arguments.
 > With the `Safe Args` it's easy to pass optional arguments. In previous versions we needed to use `query` parameters
 > Where arguments should be passed in the `route` and preceded by a `?` character following the pattern `?key=value`,
 > and if you want to pass multiple optional parameters they have to be separated with `&`
-> character `?key1=value1&key2=value2`. Also the
-> optional parameters has to be provided with the default value
+> character `?key1=value1&key2=value2`. Also, the optional parameters has to be provided with the default value
 
-Lets create the `Fourth` screen that will have two optional arguments `name` and `surname`.
+Let's create the `Fourth` screen that will have two optional arguments `name` and `surname`.
 
 ```kotlin
 @Serializable
@@ -391,9 +390,8 @@ payment or a tutorial).
 
 Adding the nested navigation graph is done by using the `navigation()` function in the `NavHost` composable.
 The `navigation()` function takes the `startDestination` and the `route`. The `route` is a unique name (or object) of
-the nested
-navigation graph to distinguish it from other graphs. The `startDestination` is the screen that will be displayed when
-the nested graph is opened.
+the nested navigation graph to distinguish it from other graphs. The `startDestination` is the screen that will be
+displayed when the nested graph is opened.
 
 ```kotlin 
 @Serializable
@@ -438,9 +436,8 @@ fun Navigation() {
 ```
 
 To clarify the navigation we can split the `Navigation()` function into separate components, first will handle `maib`
-graph and
-second the `nested` graph. To do so we need to create extension functions for `NavGraphBuilder` that will hold specific
-screens which will result in such graph changes:
+graph and second the `nested` graph. To do so we need to create extension functions for `NavGraphBuilder` that will hold
+specific screens which will result in such graph changes:
 
 ```mermaid
   graph TD
@@ -521,10 +518,8 @@ fun SixthScreen(navController: NavHostController) {
 We can now modify the `Fourth` screen and add a button that will navigate back to `MAIN` graph instead of the popping
 back the stack, so we can close the `NESTED` graph immediately and dispose all its children screens from the backstack.
 The `navigate()` builder has a `popUpTo()` method that allows to remove the destinations from the backstack. We can pass
-the
-destination to which we want to pop back to. There is also the `inclusive` parameter to remove the passed destination
-from the
-backstack as well.
+the destination to which we want to pop back to. There is also the `inclusive` parameter to remove the passed
+destination from the backstack as well.
 
 ```kotlin
 @Composable
@@ -560,8 +555,7 @@ fun SixthScreen(...) {
 ```
 
 You can mix the functions as much as you want to achieve desired behaviour, for example you can `pop` screen before
-entering a new
-one, drop whole graphs and more - it's a flexible solution.
+entering a new one, drop whole graphs and more - it's a flexible solution.
 
 ![Nested Graphs](/blog/nested_graphs_4.gif "nested graphs gif")
 
@@ -607,9 +601,8 @@ The local `navController` is used to navigate between tabs. The `BottomNavigatio
 will render the bottom bar with necessary elements such as **icon**, **label** and **selected** state, and even adds
 slight dim to the selected item.
 But to do so we need to provide the information about the tabs. Like in every other type of navigation the displayed
-screens
-need their own `route`/`destination`, so we can to create a new `sealed class` for the tabs inside current `Screen.kt`
-file.
+screens need their own `route`/`destination`, so we can to create a new `sealed class` for the tabs inside
+current `Screen.kt`file.
 
 ```kotlin
 @Serializable
@@ -660,8 +653,7 @@ The `BottomBar` is a composable function responsible for handling the elements i
 the elements (in our case `tabs`) that are available in the bottom bar. We are also using
 the `currentBackStackEntryAsState()` to get the current destination - the value is updated with every `navControler`
 changes due to `navigate()` or `pop()` functions calls which are triggering the recomposition. As a result the top entry
-on
-the backstack is returned - so we will know what is currently displayed, and we can retrieve the `destination` that
+on the backstack is returned - so we will know what is currently displayed, and we can retrieve the `destination` that
 contains information about the screen.
 
 The `BottomNavigation` control takes a few parameters, and the last one is
@@ -701,9 +693,8 @@ The `selected` state is calculated by checking if the current destination is the
 The `onClick` action is responsible for navigating to the clicked tab.
 
 Since we want only one active screen inside the tabs container we need to `pop` it. This will cause dropping other
-element from
-the back stack. We can also add the `launchSingleTop` which will ensure that the tab is not preserved, and will be
-recreated with every click.
+element from the back stack. We can also add the `launchSingleTop` which will ensure that the tab is not preserved, and
+will be recreated with every click.
 
 Last thing to do is to add an entrypoint in the `main` graph.
 
