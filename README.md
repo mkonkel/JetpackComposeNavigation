@@ -29,8 +29,8 @@ the [Voyager](https://github.com/mkonkel/VoyagerNavigation), [Apyx](https://gith
 >
 >> 05.07.2024 edit:
 >>
->> Good news are that the new version of compose multiplatform is available the `1.7.0-alpha01` and it brings
-> > the `Safe Args`!
+>> Good news are that the new update of compose multiplatform is available. The version `1.7.0-alpha01` that brings
+>> the `Safe Args`!
 
 Base project setup as always is made with [Kotlin Multiplatform Wizard](https://kmp.jetbrains.com), we also need to add
 some [navigation-compose](https://developer.android.com/develop/ui/compose/navigation) as it is the core
