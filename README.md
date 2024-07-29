@@ -159,7 +159,7 @@ fun SecondScreen() {
 }
 ```
 
-Now fill the gaps in `Navigation()` function with created screens.
+Now, let's fill the gaps in `Navigation()` function with created screens.
 We left some TODOs in the screens. If we want to navigate from screen to screen we need to pass the `navConroler` as an
 input to our composable and then call `navigate()` method and `popBackStack()` to go back.
 
@@ -204,7 +204,7 @@ button that navigates back to the `First` screen.
 > as `query`
 
 With the `Safe Args` we can pass parameters as the part of the destination object which is easy and convenient, there
-are two types of arguments **required*** and **optional**
+are two types of arguments **required** and **optional**
 
 #### Required Arguments
 
@@ -304,7 +304,7 @@ fun ThirdScreen(navController: NavHostController, greetings: String) {
 
 For optional arguments we will follow same idea as with required arguments.
 
-> Noge :
+> Note :
 >
 > With the `Safe Args` it's easy to pass optional arguments. In previous versions we needed to use `query` parameters
 > Where arguments should be passed in the `route` and preceded by a `?` character following the pattern `?key=value`,
@@ -631,7 +631,6 @@ Now we can create the bottom navigation tabs.
 
 ```kotlin
 @Composable
-@Composable
 private fun BottomBar(navController: NavHostController) {
     val tabs = listOf(
         Screen.Eighth.Tab.Home,
@@ -657,7 +656,7 @@ on the backstack is returned - so we will know what is currently displayed, and 
 contains information about the screen.
 
 The `BottomNavigation` control takes a few parameters, and the last one is
-the `content: @Composable RowScope.() -> Unit` whuch will be responsible for
+the `content: @Composable RowScope.() -> Unit` which will be responsible for
 creating the bottom navigation view. For each tab that we want to display we should create proper UI element.
 We can create an extension function for `RowScope` that will be responsible for providing the `BottomNavigationItem` for
 each tab.
@@ -721,7 +720,7 @@ fun FirstScreen(navController: NavHostController) {
 
 ### Async Operations
 
-The last thing that we will cover in this post is the async operations. Previously discussed navigation
+The last thing that we will cover are this post is async operations. Previously discussed navigation
 libraries ([Decompose](https://github.com/mkonkel/DecomposeNavigation), [Appyx](https://github.com/mkonkel/AppyxNavigation), [Voyager](https://github.com/mkonkel/VoyagerNavigation))
 provided they own business logic container object where async operation can be handled. In the case of JetpackCompose we
 will be using `ViewModels` that recently were moved to compose multiplatform library.
@@ -731,8 +730,6 @@ First thing to add is the proper dependency according to
 the [documentation](https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-viewmodels.html)
 
 ```toml
-
-```yaml
 [versions]
 common-viewmodels = "2.8.0"
 
@@ -749,7 +746,7 @@ commonMain.dependencies {
 
 The general usage of the `ViewModel` is quite simple and similar to the android approach. We need to create a class that
 extends the `ViewModel` and then put the logic there.
-The `ViewModel` offer us a `viewModelScope` that is a `CoroutineScope` that is bound to the lifecycle of
+The `ViewModel` offer us a `viewModelScope` which is a `CoroutineScope` that is bound to the lifecycle of
 the `ViewModel`. It means that when the `ViewModel` is destroyed all the coroutines that are launched in
 the `viewModelScope` will be cancelled.
 Therefore, we can easily use it to handle the async operations.
@@ -798,7 +795,7 @@ private fun Countdown(viewModel: EleventhViewModel) {
 }
 ```
 
-After adding the created screen to the navigation, we can launch it from the `Forst` screen end examine the countdown
+After adding the created screen to the navigation, we can launch it from the `First` screen end examine the countdown
 functionality.
 
 ![Coroutines Support](/blog/coroutines_support_6.gif "coroutines support gif")
